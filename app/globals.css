@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Updated color palette to modern cyan and orange theme */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 29%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 29%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 220 13% 29%;
+    --primary: 188 94% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 24 95% 53%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 0 0% 100%;
+    --ring: 188 94% 37%;
+    --radius: 0.5rem;
+
+    /* Updated sidebar tokens for modern design */
+    --sidebar-background: 220 13% 29%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 220 13% 29%;
+    --sidebar-accent: 24 95% 53%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 188 94% 37%;
+
+    /* Added chart colors for analytics */
+    --chart-1: 188 94% 37%;
+    --chart-2: 24 95% 53%;
+    --chart-3: 220 13% 29%;
+    --chart-4: 220 14% 96%;
+    --chart-5: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+    --info: 188 94% 37%;
+    --info-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    /* Updated dark mode colors for better contrast */
+    --background: 220 27% 8%;
+    --foreground: 220 14% 96%;
+    --card: 220 27% 8%;
+    --card-foreground: 220 14% 96%;
+    --popover: 220 27% 8%;
+    --popover-foreground: 220 14% 96%;
+    --primary: 188 94% 37%;
+    --primary-foreground: 220 27% 8%;
+    --secondary: 24 95% 53%;
+    --secondary-foreground: 220 27% 8%;
+    --muted: 220 27% 12%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 24 95% 53%;
+    --accent-foreground: 220 27% 8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 14% 96%;
+    --border: 220 27% 12%;
+    --input: 220 27% 12%;
+    --ring: 188 94% 37%;
+
+    /* Dark mode sidebar styling */
+    --sidebar-background: 220 27% 6%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 220 14% 96%;
+    --sidebar-primary-foreground: 220 27% 6%;
+    --sidebar-accent: 24 95% 53%;
+    --sidebar-accent-foreground: 220 27% 6%;
+    --sidebar-border: 220 27% 12%;
+    --sidebar-ring: 188 94% 37%;
+
+    /* Dark mode chart colors */
+    --chart-1: 188 94% 37%;
+    --chart-2: 24 95% 53%;
+    --chart-3: 220 14% 96%;
+    --chart-4: 220 27% 12%;
+    --chart-5: 220 27% 8%;
+
+    --success: 142 70% 45%;
+    --success-foreground: 220 27% 8%;
+    --warning: 32 95% 44%;
+    --warning-foreground: 220 27% 8%;
+    --info: 188 94% 37%;
+    --info-foreground: 220 27% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Updated gradient to use new primary colors */
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Enhanced card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:scale-[1.02];
+  }
+
+  /* Added modern card variants */
+  .card-modern {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg shadow-sm;
+  }
+
+  .card-stats {
+    @apply bg-gradient-to-br from-card to-muted/30 border border-border/50 rounded-xl shadow-lg;
+  }
+
+  .success {
+    color: hsl(var(--success));
+  }
+
+  .warning {
+    color: hsl(var(--warning));
+  }
+
+  .info {
+    color: hsl(var(--info));
+  }
+
+  /* Added modern button variants */
+  .btn-modern {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 rounded-lg px-4 py-2 font-medium;
+  }
+
+  .btn-secondary-modern {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all duration-200 rounded-lg px-4 py-2 font-medium;
+  }
+
+  /* Added animated gradient background for interactive elements */
+  .animate-gradient-xy {
+    background-size: 400% 400%;
+    animation: gradient-xy 15s ease infinite;
+  }
+
+  /* Added floating animation for interactive particles */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Added pulse glow effect for interactive elements */
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+}
+
+/* Added keyframe animations for interactive background effects */
+@keyframes gradient-xy {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Added smooth particle trail effect */
+@keyframes particle-trail {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
