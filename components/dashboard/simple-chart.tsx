@@ -11,17 +11,49 @@ export function SimpleChart({ sales, type = "bar" }: SimpleChartProps) {
   const [chartData, setChartData] = useState<any[]>([])
 
   useEffect(() => {
-    // Generate sample data for demonstration
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-    const sampleData = months.map((month, index) => ({
-      name: month,
-      value: Math.floor(Math.random() * 50000) + 10000,
-      height: Math.floor(Math.random() * 80) + 20,
+    if (!sales || sales.length === 0) {
+      // If no sales data, show empty chart
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+      const emptyData = months.map((month) => ({
+        name: month,
+        value: 0,
+        height: 0,
+      }))
+      setChartData(emptyData)
+      return
+    }
+
+    // Group sales by month
+    const monthlyData: { [key: string]: number } = {}
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    sales.forEach((sale) => {
+      const date = new Date(sale.created_at)
+      const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + (sale.total || 0)
+    })
+
+    // Get last 6 months of data
+    const sortedMonths = Object.keys(monthlyData)
+      .sort((a, b) => {
+        const dateA = new Date(a)
+        const dateB = new Date(b)
+        return dateA.getTime() - dateB.getTime()
+      })
+      .slice(-6)
+
+    const maxValue = Math.max(...sortedMonths.map((month) => monthlyData[month]), 1)
+
+    const realData = sortedMonths.map((month) => ({
+      name: month.split(" ")[0], // Just show month name
+      value: monthlyData[month],
+      height: (monthlyData[month] / maxValue) * 100,
     }))
-    setChartData(sampleData)
+
+    setChartData(realData)
   }, [sales])
 
-  const maxValue = Math.max(...chartData.map((d) => d.value))
+  const maxValue = Math.max(...chartData.map((d) => d.value), 1)
 
   if (type === "line") {
     return (
@@ -42,14 +74,16 @@ export function SimpleChart({ sales, type = "bar" }: SimpleChartProps) {
           ))}
 
           {/* Line chart */}
-          <polyline
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="3"
-            points={chartData
-              .map((d, i) => `${(i * 400) / (chartData.length - 1)},${300 - (d.value / maxValue) * 250}`)
-              .join(" ")}
-          />
+          {chartData.length > 1 && (
+            <polyline
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="3"
+              points={chartData
+                .map((d, i) => `${(i * 400) / (chartData.length - 1)},${300 - (d.value / maxValue) * 250}`)
+                .join(" ")}
+            />
+          )}
 
           {/* Data points */}
           {chartData.map((d, i) => (
@@ -87,7 +121,7 @@ export function SimpleChart({ sales, type = "bar" }: SimpleChartProps) {
           <div className="text-xs text-muted-foreground mb-2">₦{data.value.toLocaleString()}</div>
           <div
             className="w-full bg-primary rounded-t-sm transition-all duration-500 ease-out"
-            style={{ height: `${data.height}%` }}
+            style={{ height: `${data.height}%`, minHeight: data.value > 0 ? "2%" : "0%" }}
           />
           <div className="text-xs text-muted-foreground mt-2 font-medium">{data.name}</div>
         </div>
