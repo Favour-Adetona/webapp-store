@@ -83,7 +83,7 @@ export function PublicReceipt({ saleId }: PublicReceiptProps) {
             <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
               <ShoppingBag className="h-8 w-8 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl">RETAIL OPERATIONS</CardTitle>
+            <CardTitle className="text-2xl">A1 PHARMACY AND STORES LTD</CardTitle>
             <p className="text-muted-foreground">Digital Purchase Receipt</p>
           </CardHeader>
 
