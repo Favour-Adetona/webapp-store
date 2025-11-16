@@ -50,7 +50,6 @@ function AnimatedCounter({
       if (!startTime) startTime = currentTime
       const progress = Math.min((currentTime - startTime) / duration, 1)
 
-      // Easing function for smooth animation
       const easeOutQuart = 1 - Math.pow(1 - progress, 4)
       setDisplayValue(Math.floor(value * easeOutQuart))
 
@@ -90,33 +89,35 @@ export function DashboardPage() {
   const handleRefresh = async () => {
     setRefreshing(true)
     await loadData()
-    setTimeout(() => setRefreshing(false), 1000) // Minimum animation time
+    setTimeout(() => setRefreshing(false), 1000)
   }
 
   const loadData = async () => {
     try {
       setLoading(true)
 
-      // Get current user and check admin status
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      setIsAdmin(currentUser?.role === "admin")
+      const isAdmin = currentUser?.role === "admin"
+      setIsAdmin(isAdmin)
 
-      // Load data from Supabase
-      const [productsData, salesData, revenue] = await Promise.all([
+      const [productsData, salesData] = await Promise.all([
         getProducts(),
         getSales(),
-        getTodaysRevenue(), // Use backend function for revenue
       ])
 
       const safeProductsData = Array.isArray(productsData) ? productsData : []
       const safeSalesData = Array.isArray(salesData) ? salesData : []
 
-      console.log("Sales data:", safeSalesData) // Debug sales data
-
       setProducts(safeProductsData)
       setSales(safeSalesData)
-      setTodayRevenue(revenue) // Set revenue directly from getTodaysRevenue
+
+      // Only fetch revenue for admin
+      let revenue = 0
+      if (isAdmin) {
+        revenue = await getTodaysRevenue()
+      }
+      setTodayRevenue(revenue)
 
       // Filter low stock items
       const lowStock = safeProductsData.filter((product: any) => product.stock <= (product.low_stock_threshold || 0))
@@ -140,7 +141,6 @@ export function DashboardPage() {
         const saleDate = new Date(sale.created_at)
         return saleDate >= startOfDay && saleDate <= endOfDay
       })
-      console.log("Today’s sales:", todaySalesData) // Debug today’s sales
       setTodaySales(todaySalesData)
       setTodayTransactions(todaySalesData.length)
     } catch (error) {
@@ -154,7 +154,6 @@ export function DashboardPage() {
     loadData()
   }, [])
 
-  // Listen for external tab changes (from user nav)
   useEffect(() => {
     const handleTabChange = (event: CustomEvent) => {
       if (event.detail === "audit") {
@@ -198,6 +197,7 @@ export function DashboardPage() {
     )
   }
 
+  // STAFF VIEW: Restricted Revenue
   if (!isAdminState) {
     return (
       <div className="relative min-h-screen">
@@ -226,41 +226,35 @@ export function DashboardPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
+            {/* REVENUE CARD: RESTRICTED FOR STAFF */}
             <Card
-              className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-emerald-50 via-green-50 to-cyan-50 dark:from-emerald-950/50 dark:via-green-950/50 dark:to-cyan-950/50 overflow-hidden relative cursor-pointer transform hover:scale-[1.02]"
+              className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900/50 dark:via-gray-800/50 dark:to-gray-900/50 overflow-hidden relative cursor-not-allowed"
               onMouseEnter={() => setHoveredCard("revenue")}
               onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => setActiveTab("analytics")}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <ArrowUpRight className="h-5 w-5 text-emerald-600" />
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-400/5 to-gray-600/5 opacity-100"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
                 <div className="space-y-1">
                   <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                     Today's Revenue
                   </CardTitle>
-                  <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">
-                    <AnimatedCounter value={todayRevenue} prefix="₦" />
+                  <div className="text-3xl font-bold text-gray-500 dark:text-gray-400">
+                    —
                   </div>
                 </div>
-                <div
-                  className={`p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 shadow-lg group-hover:shadow-xl transition-all duration-300 ${hoveredCard === "revenue" ? "scale-110" : ""}`}
-                >
+                <div className="p-3 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 shadow-lg">
                   <DollarSign className="h-6 w-6 text-white" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Activity className="h-4 w-4" />
-                  <span>
-                    From <AnimatedCounter value={todayTransactions} /> transactions today
-                  </span>
+                  <span>Restricted for security</span>
                 </div>
               </CardContent>
             </Card>
 
+            {/* PRODUCTS SOLD TODAY: VISIBLE TO STAFF */}
             <Card
               className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-blue-50 via-cyan-50 to-orange-50 dark:from-blue-950/50 dark:via-cyan-950/50 dark:to-orange-950/50 overflow-hidden relative cursor-pointer transform hover:scale-[1.02]"
               onMouseEnter={() => setHoveredCard("products")}
@@ -321,6 +315,7 @@ export function DashboardPage() {
     )
   }
 
+  // ADMIN VIEW: Full Access
   return (
     <div className="relative min-h-screen">
       <InteractiveBackground />
@@ -348,6 +343,7 @@ export function DashboardPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
+          {/* ADMIN: REAL REVENUE */}
           <Card
             className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-gradient-to-br from-emerald-50 via-green-50 to-cyan-50 dark:from-emerald-950/50 dark:via-green-950/50 dark:to-cyan-950/50 overflow-hidden relative cursor-pointer transform hover:scale-[1.02]"
             onMouseEnter={() => setHoveredCard("revenue")}
