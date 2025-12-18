@@ -1,12 +1,23 @@
 {
-  "name": "my-v0-project",
+  "name": "retail-operations",
   "version": "0.1.0",
+  "description": "Retail Operations Management System",
+  "main": "electron/main.js",
   "private": true,
+  "author": "Your Name",
+  "license": "MIT",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "electron": "cross-env NODE_ENV=production electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "cross-env ELECTRON=1 next build && electron-builder",
+    "electron:build:win": "cross-env ELECTRON=1 next build && electron-builder --win",
+    "electron:build:mac": "cross-env ELECTRON=1 next build && electron-builder --mac",
+    "electron:build:linux": "cross-env ELECTRON=1 next build && electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -67,8 +78,36 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.retailops.app",
+    "productName": "Retail Operations",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "electron/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }

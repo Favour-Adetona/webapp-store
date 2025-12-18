@@ -12,7 +12,7 @@ interface ProductsTableProps {
   products: any[]
   selectedProducts?: string[]
   onEdit: (product: any) => void
-  onDelete: (productId: number) => void
+  onDelete: (productId: string) => void
   onAdjustStock: (product: any) => void
   onSelectionChange?: (selectedIds: string[]) => void
   showSelection?: boolean

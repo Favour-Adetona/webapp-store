@@ -50,7 +50,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
-      {backgroundEnabled && <InteractiveBackground showConnections={connectionsEnabled} />}
+      {/* {backgroundEnabled && <InteractiveBackground showConnections={connectionsEnabled} />} */}
 
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 via-blue-50/20 to-orange-50/30 dark:from-gray-900/50 dark:via-cyan-900/30 dark:to-orange-900/50 pointer-events-none z-0"></div>
 
