@@ -36,8 +36,17 @@ export function InventoryPage() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null)
+  const [admin, setAdmin] = useState(false)
   const { toast } = useToast()
-  const admin = isAdmin()
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const adminStatus = await isAdmin()
+      setAdmin(adminStatus)
+    }
+    checkAdmin()
+  }, [])
 
   const loadProducts = async () => {
     try {
@@ -194,31 +203,53 @@ export function InventoryPage() {
   const handleCSVImport = async (importedProducts: any[]) => {
     try {
       setIsLoading(true)
+      setImportProgress({ current: 0, total: importedProducts.length })
       let successCount = 0
       let errorCount = 0
 
-      for (const product of importedProducts) {
-        try {
-          const createdProduct = await createProduct({
-            name: product.name,
-            category: product.category,
-            packaging: product.packaging,
-            price: product.price,
-            stock: product.stock || 0,
-            low_stock_threshold: product.lowStockThreshold || 10,
-            expiry_date: product.expiryDate,
-            image: product.image || "/placeholder.svg?height=100&width=100",
-            description: product.description,
-          })
+      // Process products in parallel batches to speed up import
+      const batchSize = 5 // Process 5 products at a time
+      for (let i = 0; i < importedProducts.length; i += batchSize) {
+        const batch = importedProducts.slice(i, i + batchSize)
+        
+        // Process batch in parallel
+        const results = await Promise.allSettled(
+          batch.map(async (product) => {
+            try {
+              const createdProduct = await createProduct({
+                name: product.name,
+                category: product.category,
+                packaging: product.packaging,
+                price: product.price,
+                stock: product.stock || 0,
+                low_stock_threshold: product.low_stock_threshold || 10,
+                expiryDate: product.expiry_date || null,
+                image: product.image || "/placeholder.svg?height=100&width=100",
+              } as any)
 
-          if (createdProduct) {
-            await logInventoryAdd(createdProduct)
+              if (createdProduct) {
+                await logInventoryAdd(createdProduct)
+                return { success: true, product: createdProduct }
+              }
+              return { success: false, error: "Failed to create product" }
+            } catch (error: any) {
+              console.error("Error importing product:", product.name, error)
+              return { success: false, error: error.message || "Unknown error" }
+            }
+          })
+        )
+
+        // Count successes and errors
+        results.forEach((result) => {
+          if (result.status === "fulfilled" && result.value.success) {
             successCount++
+          } else {
+            errorCount++
           }
-        } catch (error) {
-          console.error("Error importing product:", product.name, error)
-          errorCount++
-        }
+        })
+
+        // Update progress
+        setImportProgress({ current: Math.min(i + batchSize, importedProducts.length), total: importedProducts.length })
       }
 
       await loadProducts()
@@ -229,6 +260,7 @@ export function InventoryPage() {
       })
 
       setShowCSVImport(false)
+      setImportProgress(null)
     } catch (error: any) {
       console.error("Error during CSV import:", error)
       toast({
@@ -236,6 +268,7 @@ export function InventoryPage() {
         title: "Import failed",
         description: error.message || "Failed to import products",
       })
+      setImportProgress(null)
     } finally {
       setIsLoading(false)
     }
@@ -455,7 +488,16 @@ export function InventoryPage() {
         />
       )}
 
-      {showCSVImport && <CSVImport onImport={handleCSVImport} onClose={() => setShowCSVImport(false)} />}
+      {showCSVImport && (
+        <CSVImport
+          onImport={handleCSVImport}
+          onClose={() => {
+            setShowCSVImport(false)
+            setImportProgress(null)
+          }}
+          importProgress={importProgress}
+        />
+      )}
 
       {showBatchStockAdjustment && (
         <BatchStockAdjustment

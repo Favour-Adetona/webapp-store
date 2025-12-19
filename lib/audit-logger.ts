@@ -1,15 +1,16 @@
 import { getCurrentUser } from "@/lib/supabase-operations"
-import { createClient } from "@/lib/supabase/client"
+import { createAuditEntry } from "@/lib/database-adapter"
+import { isElectron } from "@/lib/utils"
 
 interface AuditEntry {
   id?: string
   timestamp?: string
-  user_id: string
+  user_id: string | null
   user_name: string
   user_role: string
   action: "login" | "sale" | "inventory_add" | "inventory_edit" | "stock_adjustment"
   details: any
-  ip_address?: string
+  ip_address?: string | null
 }
 
 export async function logAuditEvent(
@@ -21,9 +22,7 @@ export async function logAuditEvent(
     const user = customUser || (await getCurrentUser())
     if (!user) return
 
-    const supabase = createClient()
-
-    const auditEntry: AuditEntry = {
+    const auditEntry: Omit<AuditEntry, "id" | "timestamp" | "created_at"> = {
       user_id: user.id,
       user_name: user.name || user.username,
       user_role: user.role,
@@ -32,10 +31,18 @@ export async function logAuditEvent(
       ip_address: getClientIP(),
     }
 
-    const { error } = await supabase.from("audit_trail").insert(auditEntry)
+    if (isElectron()) {
+      // Use SQLite via adapter
+      await createAuditEntry(auditEntry)
+    } else {
+      // Use Supabase for web
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { error } = await supabase.from("audit_trail").insert(auditEntry)
 
-    if (error) {
-      console.error("Error logging audit event:", error)
+      if (error) {
+        console.error("Error logging audit event:", error)
+      }
     }
   } catch (error) {
     console.error("Error in logAuditEvent:", error)
@@ -105,20 +112,28 @@ export async function logStockAdjustment(adjustmentData: any) {
 
 export async function getAuditTrail(): Promise<AuditEntry[]> {
   try {
-    const supabase = createClient()
+    if (isElectron()) {
+      // Use SQLite via adapter
+      const { getAuditTrail: getTrail } = await import('@/lib/database-adapter')
+      return await getTrail()
+    } else {
+      // Use Supabase for web
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
 
-    const { data, error } = await supabase
-      .from("audit_trail")
-      .select("*")
-      .order("timestamp", { ascending: false })
-      .limit(1000) // Limit to last 1000 entries for performance
+      const { data, error } = await supabase
+        .from("audit_trail")
+        .select("*")
+        .order("timestamp", { ascending: false })
+        .limit(1000) // Limit to last 1000 entries for performance
 
-    if (error) {
-      console.error("Error fetching audit trail:", error)
-      return []
+      if (error) {
+        console.error("Error fetching audit trail:", error)
+        return []
+      }
+
+      return data || []
     }
-
-    return data || []
   } catch (error) {
     console.error("Error in getAuditTrail:", error)
     return []

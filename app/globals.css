@@ -2,6 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure proper event handling in Electron */
+@layer base {
+  html, body {
+    -webkit-user-select: auto !important;
+    user-select: auto !important;
+    touch-action: manipulation;
+  }
+  
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Critical: Prevent app-region drag from blocking clicks */
+  button, 
+  a, 
+  input:not([type="file"]), 
+  select, 
+  textarea, 
+  [role="button"],
+  [onclick],
+  label,
+  form {
+    -webkit-app-region: no-drag !important;
+    app-region: no-drag !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    -webkit-user-select: auto !important;
+    user-select: auto !important;
+    touch-action: manipulation !important;
+  }
+  
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+  }
+  
+  /* Ensure clickable areas are large enough */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent any overlays from blocking clicks */
+  button::before,
+  button::after,
+  a::before,
+  a::after {
+    pointer-events: none !important;
+  }
+}
+
 @layer base {
   :root {
     /* Updated color palette to modern cyan and orange theme */

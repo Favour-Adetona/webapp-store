@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { NotificationPanel } from "@/components/layout/notification-panel"
-import { Store, Zap, ZapOff, Link, Unlink } from "lucide-react"
+import { Store } from "lucide-react"
 
 import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
@@ -11,7 +11,6 @@ import { UserNav } from "@/components/layout/user-nav"
 import { cn } from "@/lib/utils"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileSidebar } from "@/components/layout/sidebar"
-import { InteractiveBackground } from "@/components/ui/interactive-background"
 import { Button } from "@/components/ui/button"
 
 interface AppShellProps {
@@ -20,8 +19,6 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const [user, setUser] = useState<any>(null)
-  const [backgroundEnabled, setBackgroundEnabled] = useState(true)
-  const [connectionsEnabled, setConnectionsEnabled] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -36,23 +33,12 @@ export function AppShell({ children }: AppShellProps) {
     setUser(currentUser)
   }, [router, pathname])
 
-  const toggleBackground = () => {
-    setBackgroundEnabled(!backgroundEnabled)
-  }
-
-  const toggleConnections = () => {
-    setConnectionsEnabled(!connectionsEnabled)
-  }
-
   if (!user) {
     return null // Or a loading spinner
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
-      {backgroundEnabled && <InteractiveBackground showConnections={connectionsEnabled} />}
-
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 via-blue-50/20 to-orange-50/30 dark:from-gray-900/50 dark:via-cyan-900/30 dark:to-orange-900/50 pointer-events-none z-0"></div>
 
       <header className="sticky top-0 z-50 w-full border-b-2 border-gradient-to-r from-cyan-500/20 to-orange-500/20 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/85 shadow-lg shadow-cyan-500/10 relative">
         <div className="container flex h-16 sm:h-20 items-center px-3 sm:px-4 lg:px-8">
@@ -104,41 +90,6 @@ export function AppShell({ children }: AppShellProps) {
         </main>
       </div>
 
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col gap-2 sm:gap-3">
-        <Button
-          onClick={toggleConnections}
-          size="sm"
-          variant={connectionsEnabled ? "default" : "outline"}
-          className={cn(
-            "rounded-full w-10 h-10 sm:w-12 sm:h-12 p-0 shadow-lg transition-all duration-300 hover:scale-110",
-            connectionsEnabled
-              ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-blue-500/25"
-              : "bg-background/80 backdrop-blur-sm border-2 border-muted hover:bg-muted/50 text-muted-foreground",
-          )}
-          title={connectionsEnabled ? "Disable Blue Lines" : "Enable Blue Lines"}
-        >
-          {connectionsEnabled ? (
-            <Link className="h-4 w-4 sm:h-5 sm:w-5" />
-          ) : (
-            <Unlink className="h-4 w-4 sm:h-5 sm:w-5" />
-          )}
-        </Button>
-
-        <Button
-          onClick={toggleBackground}
-          size="sm"
-          variant={backgroundEnabled ? "default" : "outline"}
-          className={cn(
-            "rounded-full w-10 h-10 sm:w-12 sm:h-12 p-0 shadow-lg transition-all duration-300 hover:scale-110",
-            backgroundEnabled
-              ? "bg-gradient-to-r from-cyan-500 to-orange-500 hover:from-cyan-600 hover:to-orange-600 text-white shadow-cyan-500/25"
-              : "bg-background/80 backdrop-blur-sm border-2 border-muted hover:bg-muted/50 text-muted-foreground",
-          )}
-          title={backgroundEnabled ? "Disable Interactive Background (Save Battery)" : "Enable Interactive Background"}
-        >
-          {backgroundEnabled ? <Zap className="h-4 w-4 sm:h-5 sm:w-5" /> : <ZapOff className="h-4 w-4 sm:h-5 sm:w-5" />}
-        </Button>
-      </div>
     </div>
   )
 }

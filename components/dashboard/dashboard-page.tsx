@@ -27,7 +27,6 @@ import { ExpiryAlertsTable } from "@/components/dashboard/expiry-alerts-table"
 import { TopSellingProducts } from "@/components/dashboard/top-selling-products"
 import { AuditTrail } from "@/components/dashboard/audit-trail"
 import { getProducts, getSales, getCurrentUser, getTodaysRevenue } from "@/lib/supabase-operations"
-import { InteractiveBackground } from "@/components/ui/interactive-background"
 
 function AnimatedCounter({
   value,
@@ -168,7 +167,6 @@ export function DashboardPage() {
   if (loading) {
     return (
       <div className="relative min-h-screen">
-        <InteractiveBackground />
         <div className="relative z-10 space-y-8 animate-pulse">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -201,7 +199,6 @@ export function DashboardPage() {
   if (!isAdminState) {
     return (
       <div className="relative min-h-screen">
-        <InteractiveBackground />
         <div className="relative z-10 space-y-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -318,7 +315,6 @@ export function DashboardPage() {
   // ADMIN VIEW: Full Access
   return (
     <div className="relative min-h-screen">
-      <InteractiveBackground />
       <div className="relative z-10 space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

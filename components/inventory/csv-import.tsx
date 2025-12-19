@@ -10,10 +10,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { Progress } from "@/components/ui/progress"
 
 interface CSVImportProps {
   onImport: (products: any[]) => void
   onClose: () => void
+  importProgress?: { current: number; total: number } | null
 }
 
 interface ParsedProduct {
@@ -30,7 +32,7 @@ interface ParsedProduct {
   isValid: boolean
 }
 
-export function CSVImport({ onImport, onClose }: CSVImportProps) {
+export function CSVImport({ onImport, onClose, importProgress }: CSVImportProps) {
   const [csvData, setCsvData] = useState<string>("")
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
@@ -359,17 +361,31 @@ export function CSVImport({ onImport, onClose }: CSVImportProps) {
                   </AlertDescription>
                 </Alert>
               )}
+
+              {importProgress && (
+                <Alert>
+                  <AlertDescription className="w-full space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Importing products...</span>
+                      <span className="font-medium">
+                        {importProgress.current} / {importProgress.total}
+                      </span>
+                    </div>
+                    <Progress value={(importProgress.current / importProgress.total) * 100} className="h-2" />
+                  </AlertDescription>
+                </Alert>
+              )}
             </>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
+          <Button variant="outline" onClick={onClose} disabled={!!importProgress}>
+            {importProgress ? "Importing..." : "Cancel"}
           </Button>
           {showPreview && (
-            <Button onClick={handleImport} disabled={validCount === 0}>
-              Import {validCount} Products
+            <Button onClick={handleImport} disabled={validCount === 0 || !!importProgress}>
+              {importProgress ? `Importing... (${importProgress.current}/${importProgress.total})` : `Import ${validCount} Products`}
             </Button>
           )}
         </DialogFooter>

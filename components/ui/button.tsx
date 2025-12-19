@@ -40,12 +40,56 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    const buttonRef = React.useRef<HTMLButtonElement>(null)
+    
+    // Fix for Electron: Add native event listener as fallback
+    React.useEffect(() => {
+      if (typeof window !== 'undefined' && (window as any).process?.type && onClick) {
+        const button = buttonRef.current || (typeof ref === 'object' && ref?.current) || null
+        if (button) {
+          const nativeHandler = (e: MouseEvent) => {
+            // Create a synthetic event-like object
+            const syntheticEvent = {
+              ...e,
+              currentTarget: button,
+              target: e.target,
+              preventDefault: () => e.preventDefault(),
+              stopPropagation: () => e.stopPropagation(),
+              nativeEvent: e,
+            } as unknown as React.MouseEvent<HTMLButtonElement>
+            
+            // Call the React onClick handler
+            if (onClick) {
+              onClick(syntheticEvent)
+            }
+          }
+          
+          // Use capture phase to ensure we catch the event
+          button.addEventListener('click', nativeHandler, true)
+          
+          return () => {
+            button.removeEventListener('click', nativeHandler, true)
+          }
+        }
+      }
+    }, [onClick, ref])
+    
+    const combinedRef = React.useCallback((node: HTMLButtonElement | null) => {
+      if (typeof ref === 'function') {
+        ref(node)
+      } else if (ref && 'current' in ref) {
+        (ref as React.MutableRefObject<HTMLButtonElement | null>).current = node
+      }
+      buttonRef.current = node
+    }, [ref])
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
+        ref={combinedRef}
+        onClick={onClick}
         {...props}
       />
     )
