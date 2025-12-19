@@ -1,8 +1,37 @@
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, shell, ipcMain } = require('electron')
 const path = require('path')
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
 let mainWindow
+
+// Initialize SQLite database in main process
+let db = null
+function initializeDatabase() {
+  if (db) return db
+  
+  try {
+    const Database = require('better-sqlite3')
+    const fs = require('fs')
+    const userDataPath = app.getPath('userData')
+    const dbPath = path.join(userDataPath, 'retail-operations.db')
+    
+    // Ensure directory exists
+    const dbDir = path.dirname(dbPath)
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true })
+    }
+    
+    db = new Database(dbPath)
+    db.pragma('foreign_keys = ON')
+    
+    // Create tables (schema will be created by the renderer process)
+    console.log('SQLite database initialized at:', dbPath)
+    return db
+  } catch (error) {
+    console.error('Failed to initialize SQLite database:', error)
+    return null
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -15,6 +44,7 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       webSecurity: true,
+      sandbox: false,
     },
     icon: path.join(__dirname, '../public/placeholder-logo.png'),
     show: false,
@@ -24,23 +54,21 @@ function createWindow() {
   // Show window when ready
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.focus()
     
-    // Focus on window creation
     if (isDev) {
       mainWindow.webContents.openDevTools()
     }
   })
 
   // Load the app
-  const startUrl = process.env.ELECTRON_START_URL || (isDev 
-    ? 'http://localhost:3000' 
-    : `file://${path.join(__dirname, '../out/index.html')}`
-  )
-  
-  if (isDev || startUrl.startsWith('http')) {
-    mainWindow.loadURL(startUrl)
+  if (isDev) {
+    // In development, load from Next.js dev server
+    mainWindow.loadURL('http://localhost:3000')
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../out/index.html'))
+    // In production, load from the built Next.js app
+    const indexPath = path.join(__dirname, '../out/index.html')
+    mainWindow.loadFile(indexPath)
   }
 
   // Handle external links
@@ -54,7 +82,22 @@ function createWindow() {
   })
 }
 
+// IPC handlers for database path
+ipcMain.handle('get-database-path', () => {
+  return path.join(app.getPath('userData'), 'retail-operations.db')
+})
+
+ipcMain.handle('get-user-data-path', () => {
+  return app.getPath('userData')
+})
+
 app.whenReady().then(() => {
+  // Enable touch events (can help with click events on some systems)
+  app.commandLine.appendSwitch('touch-events', 'enabled')
+  
+  // Initialize database
+  initializeDatabase()
+  
   createWindow()
 
   app.on('activate', () => {
@@ -62,6 +105,14 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
+})
+
+// Cleanup database on app quit
+app.on('before-quit', () => {
+  if (db) {
+    db.close()
+    db = null
+  }
 })
 
 app.on('window-all-closed', () => {

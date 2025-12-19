@@ -1,8 +1,6 @@
 "use client"
-
 import type React from "react"
 import { logLogin } from "@/lib/audit-logger"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
-import { Store, User, UserPlus, Mail, Lock, UserCircle, Shield, CheckCircle2, KeyRound } from "lucide-react"
+import { Store, User, UserPlus, Mail, Lock, CheckCircle2, KeyRound, UserCircle } from "lucide-react"
 
 export function LoginForm() {
   const [activeTab, setActiveTab] = useState("login")
@@ -294,7 +292,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4 relative">
       <div className="w-full max-w-2xl">
         <Card className="border shadow-lg">
           <CardHeader className="space-y-4 text-center pb-6">
@@ -308,7 +306,6 @@ export function LoginForm() {
               </CardDescription>
             </div>
           </CardHeader>
-
           <CardContent className="px-6 pb-6">
             <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
